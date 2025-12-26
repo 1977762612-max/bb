@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天眼系统 - 重案组终端</title>
+    <style>
+        /* --- 全局视觉风格 (Modern Dark Dashboard) --- */
+        :root {
+            --bg-color: #0f172a;       /* 深邃背景 */
+            --card-bg: #1e293b;        /* 组件背景 */
+            --primary: #0ea5e9;        /* 警用蓝 */
+            --accent: #f59e0b;         /* 线索黄 */
+            --danger: #ef4444;         /* 警告/嫌疑红 */
+            --success: #10b981;        /* 正确绿 */
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: #334155;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .system-window {
+            width: 900px;
+            max-width: 95%;
+            height: 700px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            height: 50px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .badge {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 主要内容区 */
+        .main-stage {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-size: 28px; margin-bottom: 10px; color: white; }
+        h2 { font-size: 20px; color: var(--primary); margin-bottom: 20px; font-weight: 500; }
+        p { color: var(--text-dim); line-height: 1.6; max-width: 600px; margin-bottom: 30px; }
+
+        /* --- 交互组件：按钮 --- */
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover { background-color: #0284c7; transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        .btn-outline:hover { border-color: var(--danger); color: var(--danger); }
+
+        /* --- 核心实验变量：进度条 --- */
+        .loader-track {
+            width: 100%;
+            max-width: 480px;
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid var(--border);
+        }
+        
+        .loader-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), #38bdf8);
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.5);
+            /* transition 属性由 JS 动态注入 */
+        }
+
+        /* 物理特性 CSS Class */
+        .mode-linear { transition: width 8000ms linear; }
+        .mode-fast-start { transition: width 8000ms cubic-bezier(0.1, 0.7, 0.1, 1); }
+        .mode-peak-end { transition: width 8000ms cubic-bezier(0.9, 0, 0.9, 0.3); }
+
+        /* --- 线索卡片 --- */
+        .clue-box {
+            background: #1e293b;
+            border-left: 4px solid var(--accent);
+            padding: 24px;
+            text-align: left;
+            width: 100%;
+            max-width: 550px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .clue-meta { font-size: 12px; color: var(--accent); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .clue-text { font-size: 15px; color: var(--text-main); font-family: 'Courier New', monospace; line-height: 1.5; }
+
+        /* --- 嫌疑人选择卡片 (Grid) --- */
+        .suspect-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .suspect-card {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .suspect-card:hover { border-color: var(--primary); box-shadow: 0 0 15px rgba(14, 165, 233, 0.2); transform: translateY(-5px); }
+        .suspect-card.selected { border-color: var(--accent); background: rgba(245, 158, 11, 0.1); }
+        
+        .avatar { width: 60px; height: 60px; background: var(--border); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
+        /* --- 问卷与输入框 --- */
+        .input-group { text-align: left; width: 100%; max-width: 400px; margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-dim); }
+        input[type="text"], textarea { 
+            width: 100%; padding: 12px; background: #0f172a; border: 1px solid var(--border); 
+            color: white; border-radius: 6px; font-family: inherit; box-sizing: border-box;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--primary); }
+
+        .range-wrap { width: 100%; max-width: 400px; margin: 20px 0; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+
+        .hidden { display: none !important; }
+        
+        /* 反馈弹窗 */
+        .feedback-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 10;
+        }
+        .feedback-icon { font-size: 60px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="system-window">
+    <div class="top-bar">
+        <span>SKYNET CRIMINAL DATABASE v9.0</span>
+        <span class="badge" id="status-badge">STANDBY</span>
+    </div>
+
+    <div id="stage-intro" class="main-stage">
+        <h1>刑事案件档案 #7702</h1>
+        <h2>"泰坦科技 CEO 坠楼案"</h2>
+        <p>
+            受害者：Dr. Wallace (首席科学家)<br>
+            案发时间：昨晚 23:45<br>
+            现场情况：看似自杀，但云端服务器有数据被抹除的痕迹。
+        </p>
+        <p style="border-top: 1px solid var(--border); padding-top: 20px;">
+            您的任务：<br>
+            1. 恢复服务器中残留的三份关键日志。<br>
+            2. 阅读线索，分析动机。<br>
+            3. 在三名嫌疑人中找出真凶。
+        </p>
+        <button class="btn" onclick="startMission()">接受任务</button>
+    </div>
+
+    <div id="stage-mission-start" class="main-stage hidden">
+        <h2 id="mission-name">正在连接加密扇区...</h2>
+        <p>数据包来源：<span style="color:var(--accent)" id="mission-source">未知</span></p>
+        <div style="font-size: 40px; margin: 30px;">🔒</div>
+        <button class="btn" onclick="startLoading()">开始破解并下载</button>
+    </div>
+
+    <div id="stage-loading" class="main-stage hidden">
+        <h2>正在恢复数据碎片...</h2>
+        <p id="loading-tip">正在尝试绕过防火墙...</p>
+        
+        <div class="loader-track">
+            <div class="loader-fill" id="progBar"></div>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-dim);">数据传输中，请保持连接稳定</p>
+        
+        <button class="btn-outline" onclick="event.stopPropagation(); skipWait()">
+            ⚠️ 信号受阻？跳过并获取残缺档案
+        </button>
+    </div>
+
+    <div id="stage-clue" class="main-stage hidden">
+        <h2 style="color:var(--success)">恢复成功</h2>
+        <div class="clue-box">
+            <div class="clue-meta" id="clue-meta">DATA LOG #001</div>
+            <div class="clue-text" id="clue-content">内容加载中...</div>
+        </div>
+        <button class="btn" onclick="nextStage()">存入证物袋并继续</button>
+    </div>
+
+    <div id="stage-deduction" class="main-stage hidden">
+        <h2>案件分析：谁是真凶？</h2>
+        <p>综合以上三份情报，请指认最具作案动机和时间的嫌疑人。</p>
+        
+        <div class="suspect-grid">
+            <div class="suspect-card" onclick="selectSuspect('A', this)">
+                <div class="avatar">👩‍💼</div>
+                <h3 style="margin:5px 0; color:white;">Elena</h3>
+                <p style="font-size:12px; margin:0;">竞争对手公司 VP<br>动机：窃取商业机密</p>
+            </div>
+            <div class="suspect-card" onclick="selectSuspect('B', this)">
+                <div class="avatar">👨‍💻</div>
+                <h3 style="margin:5px 0; color:white;">Marcus</h3>
+                <p style="font-size:12px; margin:0;">死者的助理<br>动机：长期遭受职场霸凌</p>
+            </div>
+            <div class="suspect-card" onclick="selectSuspect('C', this)">
+                <div class="avatar">👨‍🔬</div>
+                <h3 style="margin:5px 0; color:white;">Victor</h3>
+                <p style="font-size:12px; margin:0;">实验室合伙人<br>动机：财务纠纷</p>
+            </div>
+        </div>
+        <br>
+        <button class="btn" id="submit-deduction-btn" onclick="submitDeduction()" disabled style="opacity: 0.5; cursor: not-allowed;">确认指认</button>
+    </div>
+
+    <div id="stage-feedback" class="feedback-overlay hidden">
+        <div class="feedback-icon" id="fb-icon">⚖️</div>
+        <h2 id="fb-title">分析中...</h2>
+        <p id="fb-text">正在比对作案时间线...</p>
+        <button class="btn" onclick="goToSurvey()">生成结案报告</button>
+    </div>
+
+    <div id="stage-survey" class="main-stage hidden">
+        <h2>结案归档：用户数据采集</h2>
+        
+        <div class="input-group">
+            <label style="color:var(--primary)">1. 请输入您的代号/姓名 (用于生成唯一档案号)</label>
+            <input type="text" id="user-name" placeholder="例如: Agent_007 或 张三">
+        </div>
+
+        <div class="range-wrap">
+            <label>2. 您感觉刚才每个文件的平均破解耗时是多久？</label>
+            <input type="range" id="time-estimate" min="1" max="20" step="0.5" oninput="document.getElementById('time-val').innerText = this.value + ' 秒'">
+            <div style="text-align: right; color: var(--primary); font-weight: bold;" id="time-val">10 秒</div>
+        </div>
+
+        <div class="range-wrap">
+            <label>3. 在等待进度条加载时，您的烦躁程度是？(1=平静, 7=非常烦躁)</label>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-dim); margin-bottom: 5px;">
+                <span>1 (平静)</span>
+                <span>7 (烦躁)</span>
+            </div>
+            <input type="range" id="anxiety-score" min="1" max="7" step="1">
+        </div>
+
+        <button class="btn" onclick="finishExperiment()">生成数据档案</button>
+    </div>
+
+    <div id="stage-export" class="main-stage hidden">
+        <h2 style="color:var(--success)">档案生成完毕</h2>
+        <p>请复制下方的数据代码，发送给研究员。</p>
+        
+        <div style="position: relative; width: 100%; max-width: 500px;">
+            <textarea id="final-data" style="width: 100%; height: 150px; background: #020617; border: 1px solid var(--primary); color: var(--primary); font-family: monospace; font-size: 12px; padding: 10px; border-radius: 6px;" readonly></textarea>
+        </div>
+        <br>
+        <button class="btn" onclick="copyData()" id="copy-btn">📋 一键复制数据</button>
+    </div>
+
+</div>
+
+<script>
+    // --- 1. 实验配置与变量 ---
+    const CONFIG = { duration: 8000, rounds: 3 };
+    
+    // 获取URL分组，默认随机
+    const urlParams = new URLSearchParams(window.location.search);
+    let assignedGroup = parseInt(urlParams.get('g'));
+    if (![1, 2, 3].includes(assignedGroup)) {
+        assignedGroup = Math.floor(Math.random() * 3) + 1;
+    }
+    const groupCodes = {1: "Linear", 2: "Fast-Start", 3: "Peak-End"};
+
+    // 状态记录
+    let currentRound = 1;
+    let roundStartTime = 0;
+    let rageClicks = 0;
+    let isWaiting = false;
+    let selectedSuspect = null;
+    
+    let experimentData = {
+        subjectID: "PENDING", // 将在最后生成
+        userName: "",
+        group: groupCodes[assignedGroup],
+        rounds: [],
+        deductionChoice: "",
+        deductionCorrect: false,
+        subjectiveTime: 0,
+        anxiety: 0,
+        totalRageClicks: 0
+    };
+
+    // --- 2. 剧本内容 (真凶是 B: Marcus) ---
+    const clues = [
+        {
+            source: "财务服务器 (Secure_Bank_Logs)",
+            meta: "LOG #8821 - 异常转账",
+            text: ">> 记录显示：Dr. Wallace 死前 2 小时，其私人账户有一笔 5000 美元的转出。\n>> 收款方：匿名加密货币钱包。\n>> 备注解码：'封口费 - 别把那件事说出去'。"
+        },
+        {
+            source: "门禁安全系统 (Access_Control)",
+            meta: "LOG #8822 - 进出记录",
+            text: ">> 案发当晚 23:30 (死前15分钟)。\n>> 实验室大门被开启。\n>> 刷卡ID: <span style='color:#f59e0b'>助理 Marcus</span>。\n>> 异常：该卡在 23:50 再次刷卡离开，期间监控被人为关闭。"
+        },
+        {
+            source: "恢复的聊天记录 (Deleted_Chats)",
+            meta: "LOG #8823 - 冲突对话",
+            text: ">> 发送者: Dr. Wallace\n>> 接收者: Marcus\n>> 内容: '我知道是你偷了我的实验数据卖给 Elena。今晚来实验室，我要你当面解释，否则明天我就报警。'"
+        }
+    ];
+
+    // --- 3. 核心逻辑函数 ---
+
+    function startMission() {
+        document.getElementById('status-badge').innerText = "ACTIVE";
+        document.getElementById('status-badge').style.background = "rgba(16, 185, 129, 0.2)";
+        document.getElementById('status-badge').style.color = "#10b981";
+        updateMissionScreen();
+        switchStage('stage-mission-start');
+    }
+
+    function updateMissionScreen() {
+        document.getElementById('mission-source').innerText = clues[currentRound-1].source;
+        document.getElementById('mission-name').innerText = `正在连接数据节点 ${currentRound}/3...`;
+    }
+
+    function startLoading() {
+        switchStage('stage-loading');
+        isWaiting = true;
+        const bar = document.getElementById('progBar');
+        
+        // Reset
+        bar.className = 'loader-fill';
+        bar.style.width = '0%';
+        void bar.offsetWidth;
+
+        roundStartTime = Date.now();
+
+        // 应用物理特性 (自变量)
+        setTimeout(() => {
+            if (assignedGroup === 1) bar.classList.add('mode-linear');
+            if (assignedGroup === 2) bar.classList.add('mode-fast-start');
+            if (assignedGroup === 3) bar.classList.add('mode-peak-end');
+            bar.style.width = '100%';
+        }, 100);
+
+        bar.ontransitionend = () => { finishRound(false); };
+    }
+
+    // 全局焦躁点击监听
+    document.addEventListener('click', function(event) {
+        if (isWaiting) {
+            // 排除按钮点击
+            if (event.target.tagName !== 'BUTTON') {
+                rageClicks++;
+            }
+        }
+    });
+
+    function skipWait() { finishRound(true); }
+
+    function finishRound(skipped) {
+        isWaiting = false;
+        const duration = Date.now() - roundStartTime;
+        document.getElementById('progBar').ontransitionend = null;
+        
+        experimentData.rounds.push({
+            round: currentRound,
+            skipped: skipped,
+            duration: duration
+        });
+
+        // 显示线索
+        document.getElementById('clue-meta').innerText = clues[currentRound-1].meta;
+        document.getElementById('clue-content').innerHTML = clues[currentRound-1].text;
+        switchStage('stage-clue');
+    }
+
+    function nextStage() {
+        currentRound++;
+        if (currentRound > CONFIG.rounds) {
+            switchStage('stage-deduction');
+        } else {
+            updateMissionScreen();
+            switchStage('stage-mission-start');
+        }
+    }
+
+    // --- 4. 推理交互逻辑 ---
+
+    function selectSuspect(suspectID, cardElement) {
+        selectedSuspect = suspectID;
+        // 清除其他选中状态
+        document.querySelectorAll('.suspect-card').forEach(el => el.classList.remove('selected'));
+        // 添加当前选中
+        cardElement.classList.add('selected');
+        // 启用按钮
+        const btn = document.getElementById('submit-deduction-btn');
+        btn.disabled = false;
+        btn.style.opacity = 1;
+        btn.style.cursor = 'pointer';
+    }
+
+    function submitDeduction() {
+        experimentData.deductionChoice = selectedSuspect;
+        const correctSuspect = 'B'; // Marcus 是真凶
+        
+        const overlay = document.getElementById('stage-feedback');
+        const icon = document.getElementById('fb-icon');
+        const title = document.getElementById('fb-title');
+        const text = document.getElementById('fb-text');
+
+        overlay.classList.remove('hidden');
+
+        // 模拟计算延迟
+        setTimeout(() => {
+            if (selectedSuspect === correctSuspect) {
+                experimentData.deductionCorrect = true;
+                icon.innerText = "✅";
+                title.innerText = "指认正确";
+                title.style.color = "#10b981";
+                text.innerText = "指纹与现场残留匹配。嫌疑人 Marcus 已被锁定。";
+            } else {
+                experimentData.deductionCorrect = false;
+                icon.innerText = "❌";
+                title.innerText = "指认错误";
+                title.style.color = "#ef4444";
+                text.innerText = "证据链不足。嫌疑人有不在场证明，真凶另有其人。";
+            }
+        }, 1500);
+    }
+
+    function goToSurvey() {
+        document.getElementById('stage-feedback').classList.add('hidden');
+        switchStage('stage-survey');
+    }
+
+    // --- 5. 数据生成与导出 ---
+
+    function finishExperiment() {
+        // 收集问卷信息
+        const nameInput = document.getElementById('user-name').value.trim() || "Anonymous";
+        experimentData.userName = nameInput;
+        experimentData.subjectiveTime = document.getElementById('time-estimate').value;
+        experimentData.anxiety = document.getElementById('anxiety-score').value;
+        experimentData.totalRageClicks = rageClicks;
+
+        // 生成 Subject ID: [组别]-[姓名缩写]-[随机码]
+        // 例如: G2-ZHANG-8X92
+        const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const cleanName = nameInput.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g, "").substring(0, 6).toUpperCase();
+        experimentData.subjectID = `G${assignedGroup}-${cleanName}-${randomSuffix}`;
+
+        // 显示 JSON
+        const jsonString = JSON.stringify(experimentData, null, 2);
+        document.getElementById('final-data').value = jsonString;
+        switchStage('stage-export');
+    }
+
+    function copyData() {
+        const copyText = document.getElementById("final-data");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); // 兼容手机
+        navigator.clipboard.writeText(copyText.value).then(() => {
+            const btn = document.getElementById("copy-btn");
+            btn.innerText = "✅ 已复制到剪贴板";
+            btn.style.background = "#10b981";
+        });
+    }
+
+    // --- 辅助函数 ---
+    function switchStage(id) {
+        document.querySelectorAll('.system-window > .main-stage').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+</script>
+
+</body>
+</html>
