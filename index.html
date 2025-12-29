@@ -128,7 +128,12 @@
         { meta: "档案 II：内部痕迹", text: "水箱内侧玻璃上，离底部 150 厘米处有一处涂抹痕迹。这很奇怪：死者身高 185 厘米，在水中漂浮时，他习惯的书写高度通常在 180 厘米左右。这个 150 厘米的痕迹太低了，倒像是身高较矮的人站在干燥的水箱里留下的。" },
         { meta: "档案 III：操作日志", text: "机器的后台日志显示里，在发现死者溺水的时候，中控台并没有及时进行排水操作。舞台监督宣称，“屏幕全黑了，我怎么点都没反应！”。当晚确实有外部黑客攻击导致中控屏幕瘫痪" }
     ];
-
+// --- 修改处 1：添加三轮加载的对应文案 ---
+    const loadingTexts = [
+        "正在解析：现场锁具的物理结构 (档案 I)...",
+        "正在扫描：水箱内壁的残留痕迹 (档案 II)...",
+        "正在恢复：中控台被删的操作日志 (档案 III)..."
+    ];
     const mathQs = [ {q: "14 + 17", a: 31}, {q: "26 - 12", a: 14}, {q: "9 + 25", a: 34} ];
 
     let currentRound = 0;
@@ -151,7 +156,14 @@
     function startWaiting() {
         if (timer) clearInterval(timer);
         switchStage('stage-loading');
-        
+        // 只有当 currentRound 小于数组长度时才更新，防止报错
+        if (currentRound < loadingTexts.length) {
+            document.getElementById('loading-title').innerText = loadingTexts[currentRound];
+        } else {
+            document.getElementById('loading-title').innerText = "正在解密档案...";
+        }
+
+        // ... (后续原有代码保持不变) ...
         document.getElementById('progBar').style.width = "0%"; 
         document.getElementById('progBar').style.background = "#1a1a1a";
         document.getElementById('math-challenge').classList.add('hidden');
@@ -257,3 +269,4 @@
 </body>
 
 </html>
+
