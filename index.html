@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CASE FILE: THE MAGICIAN'S LAST ACT</title>
     <style>
         :root {
@@ -10,318 +11,86 @@
             --stamp-red: #8a3324;
             --success-green: #2e5c34;
             --font-head: 'Courier New', Courier, monospace;
+            --font-body: 'Georgia', serif;
         }
-        body { background-color: #1a1510; color: var(--ink-black); font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; user-select: none; }
-        .container { background-color: var(--bg-paper); width: 90%; max-width: 800px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #3e362e; position: relative; }
+        
+        body { 
+            background-color: #1a1510; 
+            color: var(--ink-black); 
+            font-family: var(--font-body); 
+            margin: 0; 
+            padding: 15px; 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; /* 手机端顶部对齐更自然 */
+        }
+
+        /* 容器适配手机宽度 */
+        .container { 
+            background-color: var(--bg-paper); 
+            width: 100%; 
+            max-width: 600px; /* 限制在大屏上的宽度 */
+            padding: 25px 20px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); 
+            border: 2px solid #3e362e; 
+            position: relative; 
+            box-sizing: border-box; /* 确保padding不撑大宽度 */
+        }
+
         .hidden { display: none; }
-        h1, h2, h3 { font-family: var(--font-head); text-transform: uppercase; border-bottom: 2px solid var(--ink-black); padding-bottom: 10px; }
-        .btn { background: var(--ink-black); color: white; padding: 10px 20px; border: none; cursor: pointer; font-family: var(--font-head); margin-top: 10px; font-size: 16px; }
-        .btn:hover { background: var(--stamp-red); }
-        .btn-skip { background: transparent; color: var(--stamp-red); border: 1px dashed var(--stamp-red); padding: 5px 10px; cursor: pointer; font-size: 12px; margin-top: 10px; }
-        .clue-box { background: rgba(255,255,255,0.5); padding: 20px; border-left: 5px solid var(--stamp-red); margin: 20px 0; line-height: 1.6; }
-        
-        .profile-card { background: #e8e1d2; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; font-size: 0.95em; }
-        .profile-name { font-weight: bold; color: var(--stamp-red); display: block; margin-bottom: 4px; }
-        .profile-motive { font-style: italic; color: #666; display: block; }
 
-        .loader-track { width: 100%; height: 20px; background: #ddd; border: 2px solid var(--ink-black); margin: 20px 0; overflow: hidden; }
-        
-        /* 进度条基础样式 */
-        .loader-fill { 
-            width: 0%; 
-            height: 100%; 
+        h1 { 
+            font-family: var(--font-head); 
+            font-size: 22px; /* 手机端字号调整 */
+            margin: 0 0 15px 0;
+            text-transform: uppercase; 
+            border-bottom: 2px solid var(--ink-black); 
+            padding-bottom: 10px; 
+        }
+
+        h2, h3 { 
+            font-family: var(--font-head); 
+            text-transform: uppercase; 
+            font-size: 18px;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid rgba(26, 26, 26, 0.2);
+            padding-bottom: 5px;
+        }
+
+        p { line-height: 1.6; font-size: 15px; margin-bottom: 15px; }
+
+        /* 按钮改为全宽，适合手指点击 */
+        .btn { 
             background: var(--ink-black); 
-        } 
+            color: white; 
+            width: 100%;
+            padding: 14px; 
+            border: none; 
+            cursor: pointer; 
+            font-family: var(--font-head); 
+            font-size: 18px; 
+            margin-top: 15px; 
+            font-weight: bold;
+            border-radius: 4px; /* 轻微圆角 */
+            transition: background 0.2s;
+        }
+        .btn:active { background: #333; transform: translateY(1px); }
 
-        /* 三种动画曲线模式 */
-        /* Group 1: 线性匀速 */
-        .mode-linear .loader-fill {
-            transition: width 8000ms linear;
+        .btn-skip { 
+            background: transparent; 
+            color: var(--stamp-red); 
+            border: 1px dashed var(--stamp-red); 
+            width: 100%;
+            padding: 10px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            margin-top: 15px; 
+            border-radius: 4px;
         }
 
-        /* Group 2: 快速开始 (Fast Start) - 模拟“马上就好” */
-        .mode-fast-start .loader-fill {
-            transition: width 8000ms cubic-bezier(0.1, 0.9, 0.2, 1.0);
-        }
-
-        /* Group 3: 峰值结尾 (Peak End) - 模拟“卡顿后突然完成” */
-        .mode-peak-end .loader-fill {
-            transition: width 8000ms cubic-bezier(0.8, 0, 0.9, 1);
-        }
-        
-        #math-challenge { margin-top: 15px; padding: 15px; border: 1px solid #aaa; background: #e8e1d2; text-align: center; }
-        input[type="number"] { padding: 5px; width: 60px; font-size: 16px; border: 1px solid var(--ink-black); }
-        
-        .result-box { padding: 20px; border: 3px double var(--ink-black); margin: 20px 0; background: rgba(0,0,0,0.05); }
-        .truth-reveal { font-size: 0.9em; color: #333; margin-top: 15px; border-top: 1px solid #999; padding-top: 10px; }
-        .stamp { font-size: 24px; font-weight: bold; transform: rotate(-10deg); display: inline-block; padding: 5px 15px; border: 3px solid; margin-bottom: 15px; }
-        .stamp-success { color: var(--success-green); border-color: var(--success-green); }
-        .stamp-fail { color: var(--stamp-red); border-color: var(--stamp-red); }
-    </style>
-</head>
-<body>
-
-<div class="container" id="game-container">
-    <div id="stage-intro" class="main-stage">
-        <h1>案卷编号：#7702</h1>
-        <p>著名魔术师在表演“水箱逃生”时溺亡。你需要调阅三份核心档案并指出真凶。</p>
-        
-        <h3>涉案人员档案 (含动机分析)</h3>
-        <div class="profile-card">
-            <span class="profile-name">死者：魔术师 (身高 185cm)</span>
-            <span class="profile-motive">背景：有才华且很受观众喜爱，水箱逃生是他的代表作品。私下为人刻薄。</span>
-        </div>
-        <div class="profile-card">
-            <span class="profile-name">嫌疑人 A：灯光师 (身高 172cm)</span>
-            <span class="profile-motive">动机：长期遭受死者言语霸凌，曾当众发誓“迟早让他闭嘴”。</span>
-        </div>
-        <div class="profile-card">
-            <span class="profile-name">嫌疑人 B：替补演员 (身高 162cm)</span>
-            <span class="profile-motive">动机：才华被死者压制十年，死者扬言只要活着一天，就不让他登台。</span>
-        </div>
-        <div class="profile-card">
-            <span class="profile-name">嫌疑人 C：舞台监督 (身高 178cm)</span>
-            <span class="profile-motive">动机：和死者合作多年，被死者发现了某个重要把柄，有成员听到他们在后台激烈争吵。</span>
-        </div>
-
-        <p style="margin-top: 20px; font-style: italic; color: #555;">注意：档案解密中，请稍候...</p>
-        <button class="btn" onclick="nextRound()">开始调阅档案</button>
-    </div>
-
-    <div id="stage-loading" class="main-stage hidden" onclick="handleFidget(event)">
-        <h2 id="loading-title">正在解密档案...</h2>
-        <div class="loader-track"><div class="loader-fill" id="progBar"></div></div>
-        
-        <div id="skip-wrapper">
-            <button class="btn-skip" onclick="clickSkip()">>> 强制拉取 (需管理员验证)</button>
-        </div>
-
-        <div id="math-challenge" class="hidden">
-            <p><strong>系统暂停：等待验证</strong></p>
-            <p>请输入计算结果以强制加载：</p>
-            <span id="math-question" style="font-size: 1.2em; letter-spacing: 2px;"></span> = 
-            <input type="number" id="math-answer">
-            <button class="btn" style="padding:5px 15px; margin-left: 10px;" onclick="checkMath()">确认</button>
-        </div>
-    </div>
-
-    <div id="stage-clue" class="main-stage hidden">
-        <h2 id="clue-meta"></h2>
-        <div class="clue-box" id="clue-text"></div>
-        <button class="btn" onclick="nextRound()">下一步</button>
-    </div>
-
-    <div id="stage-deduction" class="main-stage hidden">
-        <h2>结案陈词</h2>
-        <p>结合动机与证据，谁是凶手？</p>
-        <label><input type="radio" name="suspect" value="灯光师"> 灯光师 (172cm / 动机：长期霸凌)</label><br><br>
-        <label><input type="radio" name="suspect" value="替补演员"> 替补演员 (162cm / 动机：取代上位)</label><br><br>
-        <label><input type="radio" name="suspect" value="舞台监督"> 舞台监督 (178cm / 动机：发现把柄)</label><br><br>
-        <button class="btn" onclick="submitVerdict()">提交判决</button>
-    </div>
-
-    <div id="stage-result" class="main-stage hidden">
-        <div id="result-header"></div>
-        <div class="result-box">
-            <p id="result-message"></p>
-            <div class="truth-reveal">
-                <h3>真相还原</h3>
-                <p><strong>真凶：舞台监督</strong></p>
-                <p>1. <strong>作案动机</strong>：舞台监督利用职务之便贪污公款的证据被魔术师掌握。魔术师以此勒索并扬言：如果在今晚演出结束前不答应条件，明天就把证据交给警方。</p>
-                <p>2. <strong>物理证据</strong>：水箱内壁 150cm 处的擦痕是舞台监督在布置机关时，特意弯腰在低处作业留下的。他利用替补演员身高的特征制造了这条伪证，意图将嫌疑嫁祸给急于上位的替补。</p>
-                <p>3. <strong>关键破绽</strong>：当晚确实检测到黑客攻击导致界面瘫痪。这很可能是舞台监督自导自演。调查发现，中控台设置有物理切断按钮。凶手作为一名资深的舞台监督，不可能不知道按钮的存在。</p>
-            </div>
-        </div>
-        <button class="btn" onclick="goToExport()">生成实验数据</button>
-    </div>
-
-    <div id="stage-export" class="main-stage hidden">
-        <h2>实验数据存档</h2>
-        <p>请复制下方代码，粘贴到问卷的<strong>第一题</strong>中：</p>
-        <textarea id="final-data" style="width:100%; height:250px; font-family:monospace; padding:10px; font-size: 12px;" readonly></textarea>
-        <br><br>
-        <button class="btn" id="copy-btn" onclick="copyData()">复制数据</button>
-    </div>
-</div>
-
-<script>
-    // --- 游戏数据配置 ---
-    const clues = [
-        { meta: "档案 I：锁具分析", text: "水箱挂锁没有被撬痕迹，但锁芯内部由于极度低温变得像饼干一样脆，一敲即碎。后台只有特效组用来制造烟雾的‘液氮’能造成这种效果。这意味着凶手不需要钥匙，只需要能接触到后台特效设备即可。" },
-        { meta: "档案 II：内部痕迹", text: "水箱内侧玻璃上，离底部 150 厘米处有一处涂抹痕迹。这很奇怪：死者身高 185 厘米，在水中漂浮时，他习惯的书写高度通常在 180 厘米左右。这个 150 厘米的痕迹太低了，倒像是身高较矮的人站在干燥的水箱里留下的。" },
-        { meta: "档案 III：操作日志", text: "机器的后台日志显示里，在发现死者溺水时，中控台并没有及时进行排水操作。舞台监督宣称，“屏幕全黑了，我怎么点都没反应！”。当晚确实有黑客入侵，但这似乎太过巧合，且剧场难道没有相关预案？" }
-    ];
-    
-    const loadingTexts = [
-        "正在解析：锁具的物理结构 (档案 I)...",
-        "正在扫描：水箱内壁的痕迹 (档案 II)...",
-        "正在恢复：中控台的操作日志 (档案 III)..."
-    ];
-    const mathQs = [ {q: "14 + 17", a: 31}, {q: "26 - 12", a: 14}, {q: "9 + 25", a: 34} ];
-
-    let currentRound = 0;
-    
-    // 获取分组 (URL 参数 g)
-    const urlParams = new URLSearchParams(window.location.search);
-    const assignedGroup = urlParams.get('g') ? parseInt(urlParams.get('g')) : Math.floor(Math.random() * 3) + 1;
-
-    let experimentData = {
-        group: assignedGroup, 
-        rounds: [], 
-        finalChoice: "",
-        isCorrect: false,
-        startTime: Date.now()
-    };
-
-    let waitStartTime, waitTimeout, currentVerifErrors = 0, currentFidgetClicks = 0, currentClickSkipTime = null;
-
-    // --- 核心流程控制 ---
-    function nextRound() {
-        if (currentRound < clues.length) {
-            startWaiting();
-        } else {
-            switchStage('stage-deduction');
-        }
-    }
-
-    function startWaiting() {
-        // 清理旧计时器
-        if (waitTimeout) clearTimeout(waitTimeout);
-        
-        // 1. 切换界面
-        switchStage('stage-loading');
-        
-        if (currentRound < loadingTexts.length) {
-            document.getElementById('loading-title').innerText = loadingTexts[currentRound];
-        }
-
-        const bar = document.getElementById('progBar');
-        const container = document.getElementById('stage-loading');
-        
-        // 2. 初始化UI状态
-        document.getElementById('math-challenge').classList.add('hidden');
-        document.getElementById('skip-wrapper').classList.remove('hidden');
-        document.getElementById('math-answer').value = "";
-
-        // 3. 移除所有动画类，并强制重置宽度
-        container.classList.remove('mode-linear', 'mode-fast-start', 'mode-peak-end');
-        bar.style.transition = 'none'; // 禁用过渡
-        bar.style.width = "0%";
-        
-        // 4. 使用 setTimeout 延迟触发动画
-        // 这确保浏览器先完成 "display:block" 和 "width:0" 的渲染
-        // 然后再添加 class 和 width:100，从而正确触发 CSS transition
-        setTimeout(() => {
-            // 根据分组添加动画类
-            if (experimentData.group === 1) container.classList.add('mode-linear');
-            else if (experimentData.group === 2) container.classList.add('mode-fast-start');
-            else if (experimentData.group === 3) container.classList.add('mode-peak-end');
-
-            // 恢复 CSS 托管并开始动画
-            bar.style.transition = ''; 
-            bar.style.width = "100%";
-        }, 50);
-
-        // 5. 开始数据记录
-        waitStartTime = Date.now();
-        currentVerifErrors = 0;
-        currentFidgetClicks = 0;
-        currentClickSkipTime = null;
-
-        // 6. 设置8秒后自动完成
-        waitTimeout = setTimeout(() => {
-            finishWaiting(false);
-        }, 8000);
-    }
-
-    function handleFidget(e) {
-        // 忽略按钮和输入框的点击
-        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
-        currentFidgetClicks++;
-    }
-
-    function clickSkip() {
-        if (currentClickSkipTime === null) {
-            currentClickSkipTime = Date.now() - waitStartTime;
-        }
-
-        document.getElementById('math-question').innerText = mathQs[currentRound].q;
-        document.getElementById('skip-wrapper').classList.add('hidden');
-        document.getElementById('math-challenge').classList.remove('hidden');
-    }
-
-    function checkMath() {
-        const val = parseInt(document.getElementById('math-answer').value);
-        if (val === mathQs[currentRound].a) {
-            // 用户验证通过
-            clearTimeout(waitTimeout); // 停止自动完成的计时器
-            
-            // 视觉上快速填满进度条
-            const bar = document.getElementById('progBar');
-            bar.style.transition = 'width 200ms ease-out';
-            bar.style.width = "100%";
-            
-            setTimeout(() => {
-                 finishWaiting(true);
-            }, 200); 
-        } else {
-            currentVerifErrors++;
-            alert("验证未通过，请重新计算");
-            document.getElementById('math-answer').value = "";
-        }
-    }
-
-    function finishWaiting(skipped) {
-        if (waitTimeout) clearTimeout(waitTimeout);
-        
-        experimentData.rounds.push({
-            round: currentRound + 1,
-            skipped: skipped,
-            verifErrors: currentVerifErrors,
-            waitTime_ms: Date.now() - waitStartTime, 
-            fidgetClicks: currentFidgetClicks,
-            timeToClickSkip_ms: currentClickSkipTime 
-        });
-        
-        document.getElementById('clue-meta').innerText = clues[currentRound].meta;
-        document.getElementById('clue-text').innerText = clues[currentRound].text;
-        switchStage('stage-clue');
-        currentRound++;
-    }
-
-    function submitVerdict() {
-        const sel = document.querySelector('input[name="suspect"]:checked');
-        if (!sel) return alert("请指认真凶");
-        experimentData.finalChoice = sel.value;
-        experimentData.isCorrect = (sel.value === "舞台监督");
-        
-        const header = document.getElementById('result-header');
-        const msg = document.getElementById('result-message');
-        if (experimentData.isCorrect) {
-            header.innerHTML = '<div class="stamp stamp-success">推理成功</div>';
-            msg.innerText = "你的洞察力令人惊叹。你看穿了舞台监督拙劣的误触谎言。";
-        } else {
-            header.innerHTML = '<div class="stamp stamp-fail">推理失败</div>';
-            msg.innerText = "很遗憾。真正的凶手是舞台监督。";
-        }
-        switchStage('stage-result');
-    }
-
-    function goToExport() {
-        document.getElementById('final-data').value = JSON.stringify(experimentData, null, 2);
-        switchStage('stage-export');
-    }
-
-    function switchStage(id) {
-        document.querySelectorAll('.main-stage').forEach(el => el.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    }
-
-    function copyData() {
-        const txt = document.getElementById('final-data');
-        txt.select(); document.execCommand('copy');
-        document.getElementById('copy-btn').innerText = "✅ 已复制";
-    }
-</script>
-</body>
-</html>
+        .clue-box { 
+            background: rgba(255,255,255,0.6); 
+            padding: 15px; 
+            border-left: 5px solid var(--stamp-red); 
+            margin: 20px 0;
