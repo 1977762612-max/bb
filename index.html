@@ -166,9 +166,9 @@
 
         timer = setInterval(() => {
             let elapsed = Date.now() - waitStartTime;
-            let p = elapsed / 12000;
+            let p = elapsed / 8000;
             document.getElementById('progBar').style.width = (Math.min(p, 1) * 100) + "%";
-            if (elapsed >= 12000) finishWaiting(false);
+            if (elapsed >= 8000) finishWaiting(false);
         }, 50);
     }
 
@@ -255,4 +255,5 @@
     }
 </script>
 </body>
+
 </html>
