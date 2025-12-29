@@ -59,7 +59,7 @@
         </div>
         <div class="profile-card">
             <span class="profile-name">嫌疑人 C：舞台监督 (身高 178cm)</span>
-            <span class="profile-motive">动机：和死者合作多年，最近被死者发现了某些把柄，有成员听到他们在后台争吵。</span>
+            <span class="profile-motive">动机：和死者合作多年，被死者发现了某个重要把柄，有成员听到他们在后台激烈争吵。</span>
         </div>
 
         <p style="margin-top: 20px; font-style: italic; color: #555;">注意：档案解密中，请稍候...</p>
@@ -92,9 +92,9 @@
     <div id="stage-deduction" class="main-stage hidden">
         <h2>结案陈词</h2>
         <p>结合动机与证据，谁是凶手？</p>
-        <label><input type="radio" name="suspect" value="灯光师"> 灯光师 (172cm / 报复羞辱)</label><br><br>
-        <label><input type="radio" name="suspect" value="替补演员"> 替补演员 (162cm / 取代上位)</label><br><br>
-        <label><input type="radio" name="suspect" value="舞台监督"> 舞台监督 (178cm / 畏罪灭口)</label><br><br>
+        <label><input type="radio" name="suspect" value="灯光师"> 灯光师 (172cm / 动机：长期霸凌)</label><br><br>
+        <label><input type="radio" name="suspect" value="替补演员"> 替补演员 (162cm / 动机：取代上位)</label><br><br>
+        <label><input type="radio" name="suspect" value="舞台监督"> 舞台监督 (178cm / 动机：发现把柄)</label><br><br>
         <button class="btn" onclick="submitVerdict()">提交判决</button>
     </div>
 
@@ -107,7 +107,7 @@
                 <p><strong>真凶：舞台监督</strong></p>
                 <p>1. <strong>作案动机</strong>：舞台监督利用职务之便贪污公款的证据被魔术师掌握。魔术师以此勒索并扬言：如果在今晚演出结束前不答应条件，明天就把证据交给警方。</p>
                 <p>2. <strong>物理证据</strong>：水箱内壁 150cm 处的擦痕是舞台监督在布置机关时，特意弯腰在低处作业留下的。他利用替补演员身高的特征制造了这条伪证，意图将嫌疑嫁祸给急于上位的替补。</p>
-                <p>3. <strong>关键破绽</strong>：当晚确实检测到黑客攻击导致界面瘫痪。这很可能舞台监督自导自演。调查发现，中控台设置有物理切断按钮。凶手作为一名资深的舞台监督，不可能不知道按钮的存在。</p>
+                <p>3. <strong>关键破绽</strong>：当晚确实检测到黑客攻击导致界面瘫痪。这很可能是舞台监督自导自演。调查发现，中控台设置有物理切断按钮。凶手作为一名资深的舞台监督，不可能不知道按钮的存在。</p>
             </div>
         </div>
         <button class="btn" onclick="goToExport()">生成实验数据</button>
@@ -126,7 +126,7 @@
     const clues = [
         { meta: "档案 I：锁具分析", text: "水箱挂锁没有被撬痕迹，但锁芯内部由于极度低温变得像饼干一样脆，一敲即碎。后台只有特效组用来制造烟雾的‘液氮’能造成这种效果。这意味着凶手不需要钥匙，只需要能接触到后台特效设备即可。" },
         { meta: "档案 II：内部痕迹", text: "水箱内侧玻璃上，离底部 150 厘米处有一处涂抹痕迹。这很奇怪：死者身高 185 厘米，在水中漂浮时，他习惯的书写高度通常在 180 厘米左右。这个 150 厘米的痕迹太低了，倒像是身高较矮的人站在干燥的水箱里留下的。" },
-        { meta: "档案 III：操作日志", text: "机器的后台日志显示里，在发现死者溺水时，中控台并没有及时进行排水操作。舞台监督宣称，“屏幕全黑了，我怎么点都没反应！”。当晚确实有黑客入侵，但这似乎太过巧合，且剧场难度没有这类情况的预案？" }
+        { meta: "档案 III：操作日志", text: "机器的后台日志显示里，在发现死者溺水时，中控台并没有及时进行排水操作。舞台监督宣称，“屏幕全黑了，我怎么点都没反应！”。当晚确实有黑客入侵，但这似乎太过巧合，且剧场难道没有相关预案？" }
     ];
 // --- 修改处 1：添加三轮加载的对应文案 ---
     const loadingTexts = [
@@ -269,6 +269,7 @@
 </body>
 
 </html>
+
 
 
 
