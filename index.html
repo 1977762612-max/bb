@@ -93,4 +93,375 @@
             background: rgba(255,255,255,0.6); 
             padding: 15px; 
             border-left: 5px solid var(--stamp-red); 
-            margin: 20px 0;
+            margin: 20px 0; 
+            line-height: 1.6; 
+            font-size: 15px;
+        }
+        
+        /* 档案卡片样式优化 */
+        .profile-card { 
+            background: rgba(232, 225, 210, 0.6); 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            border: 1px solid #cbb; 
+            font-size: 14px; 
+        }
+        .profile-name { 
+            font-weight: bold; 
+            color: var(--stamp-red); 
+            display: block; 
+            margin-bottom: 5px; 
+            font-size: 15px;
+        }
+        .profile-motive { font-style: italic; color: #555; display: block; }
+
+        /* 进度条 */
+        .loader-track { 
+            width: 100%; 
+            height: 12px; /* 稍微变细更精致 */
+            background: #d6cfc2; 
+            border: 2px solid var(--ink-black); 
+            margin: 25px 0; 
+            overflow: hidden; 
+            border-radius: 6px;
+        }
+        .loader-fill { 
+            width: 0%; 
+            height: 100%; 
+            background: var(--ink-black); 
+        } 
+
+        /* 动画曲线保持不变 */
+        .mode-linear .loader-fill { transition: width 8000ms linear; }
+        .mode-fast-start .loader-fill { transition: width 8000ms cubic-bezier(0.1, 0.9, 0.2, 1.0); }
+        .mode-peak-end .loader-fill { transition: width 8000ms cubic-bezier(0.8, 0, 0.9, 1); }
+        
+        /* 验证码区域 */
+        #math-challenge { 
+            margin-top: 20px; 
+            padding: 20px; 
+            border: 1px solid #aaa; 
+            background: #fdfbf7; 
+            text-align: center; 
+            border-radius: 8px;
+        }
+        input[type="number"] { 
+            padding: 10px; 
+            width: 80px; 
+            font-size: 18px; /* 字体>16px 防止iOS输入时放大 */
+            border: 2px solid var(--ink-black); 
+            text-align: center;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        
+        .result-box { 
+            padding: 20px; 
+            border: 4px double var(--ink-black); 
+            margin: 20px 0; 
+            background: rgba(255,255,255,0.2); 
+        }
+        .truth-reveal { 
+            font-size: 14px; 
+            color: #333; 
+            margin-top: 20px; 
+            border-top: 1px solid rgba(0,0,0,0.2); 
+            padding-top: 15px; 
+        }
+        
+        .stamp { 
+            font-size: 20px; 
+            font-weight: bold; 
+            transform: rotate(-5deg); 
+            display: inline-block; 
+            padding: 5px 15px; 
+            border: 3px solid; 
+            margin-bottom: 15px; 
+        }
+        .stamp-success { color: var(--success-green); border-color: var(--success-green); }
+        .stamp-fail { color: var(--stamp-red); border-color: var(--stamp-red); }
+
+        /* 手机端选项优化：增大点击热区 */
+        label {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            background: rgba(255,255,255,0.4);
+            margin-bottom: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        label:active { background: rgba(255,255,255,0.8); }
+        input[type="radio"] { 
+            margin-right: 12px; 
+            margin-top: 4px;
+            transform: scale(1.3); /* 放大单选框 */
+        }
+        
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    <div id="stage-intro" class="main-stage">
+        <h1>案卷编号：#7702</h1>
+        <p>著名魔术师在表演“水箱逃生”时溺亡。你需要调阅三份核心档案并指出真凶。</p>
+        
+        <h3>涉案人员档案</h3>
+        <div class="profile-card">
+            <span class="profile-name">死者：魔术师 (185cm)</span>
+            <span class="profile-motive">背景：才华横溢但为人刻薄，代表作是水箱逃生。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 A：灯光师 (172cm)</span>
+            <span class="profile-motive">动机：长期遭霸凌，曾发誓“迟早让他闭嘴”。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 B：替补演员 (162cm)</span>
+            <span class="profile-motive">动机：才华被压制，死者扬言只要活着就不让他登台。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 C：舞台监督 (178cm)</span>
+            <span class="profile-motive">动机：贪污证据被死者掌握，案发当晚在后台发生争吵。</span>
+        </div>
+
+        <button class="btn" onclick="nextRound()">开始调阅档案</button>
+    </div>
+
+    <div id="stage-loading" class="main-stage hidden" onclick="handleFidget(event)">
+        <h2 id="loading-title">正在解密档案...</h2>
+        <div class="loader-track"><div class="loader-fill" id="progBar"></div></div>
+        
+        <div id="skip-wrapper">
+            <button class="btn-skip" onclick="clickSkip()">>> 强制拉取 (需管理员验证)</button>
+        </div>
+
+        <div id="math-challenge" class="hidden">
+            <p><strong>系统暂停：等待验证</strong></p>
+            <p>请输入结果：</p>
+            <div style="font-size: 1.5em; font-family: monospace; font-weight: bold; margin: 10px 0;">
+                <span id="math-question"></span> = ?
+            </div>
+            <input type="number" id="math-answer">
+            <button class="btn" style="margin-top: 15px;" onclick="checkMath()">确认</button>
+        </div>
+    </div>
+
+    <div id="stage-clue" class="main-stage hidden">
+        <h2 id="clue-meta"></h2>
+        <div class="clue-box" id="clue-text"></div>
+        <button class="btn" onclick="nextRound()">下一步</button>
+    </div>
+
+    <div id="stage-deduction" class="main-stage hidden">
+        <h2>结案陈词</h2>
+        <p>结合动机与证据，谁是凶手？</p>
+        <label><input type="radio" name="suspect" value="灯光师"> <div><strong>灯光师</strong><br><small>172cm / 动机：长期霸凌</small></div></label>
+        <label><input type="radio" name="suspect" value="替补演员"> <div><strong>替补演员</strong><br><small>162cm / 动机：取代上位</small></div></label>
+        <label><input type="radio" name="suspect" value="舞台监督"> <div><strong>舞台监督</strong><br><small>178cm / 动机：发现把柄</small></div></label>
+        <button class="btn" onclick="submitVerdict()">提交判决</button>
+    </div>
+
+    <div id="stage-result" class="main-stage hidden">
+        <div id="result-header" style="text-align: center;"></div>
+        <div class="result-box">
+            <p id="result-message" style="font-weight: bold; margin-bottom: 15px;"></p>
+            <div class="truth-reveal">
+                <h3>真相还原</h3>
+                <p><strong>真凶：舞台监督</strong></p>
+                <p>1. <strong>动机</strong>：舞台监督贪污公款的证据被魔术师掌握，遭到勒索。</p>
+                <p>2. <strong>痕迹证据</strong>：水箱内壁 150cm 处的擦痕是舞台监督布置机关时留下的。他利用替补演员身高的特征（162cm）制造了这条伪证，意图嫁祸。</p>
+                <p>3. <strong>关键破绽</strong>：中控台的“黑客瘫痪”是自导自演。作为资深监督，他故意忽略了物理切断按钮的存在。</p>
+            </div>
+        </div>
+        <button class="btn" onclick="goToExport()">生成实验数据</button>
+    </div>
+
+    <div id="stage-export" class="main-stage hidden">
+        <h2>实验数据存档</h2>
+        <p>请复制下方代码到问卷第一题：</p>
+        <textarea id="final-data" style="height:200px;" readonly></textarea>
+        <br><br>
+        <button class="btn" id="copy-btn" onclick="copyData()">一键复制</button>
+    </div>
+</div>
+
+<script>
+    // --- 游戏数据配置 (保持不变) ---
+    const clues = [
+        { meta: "档案 I：锁具分析", text: "水箱挂锁没有被撬痕迹，但锁芯内部由于极度低温变得像饼干一样脆，一敲即碎。后台只有特效组用来制造烟雾的‘液氮’能造成这种效果。这意味着凶手不需要钥匙，只需要能接触到后台特效设备即可。" },
+        { meta: "档案 II：内部痕迹", text: "水箱内侧玻璃上，离底部 150 厘米处有一处涂抹痕迹。这很奇怪：死者身高 185 厘米，在水中漂浮时，他习惯的书写高度通常在 180 厘米左右。这个 150 厘米的痕迹太低了，倒像是身高较矮的人站在干燥的水箱里留下的。" },
+        { meta: "档案 III：操作日志", text: "机器的后台日志显示里，在发现死者溺水时，中控台并没有及时进行排水操作。舞台监督宣称，“屏幕全黑了，我怎么点都没反应！”。当晚确实有黑客入侵，但这似乎太过巧合，且剧场难道没有相关预案？" }
+    ];
+    
+    const loadingTexts = [
+        "正在解析：锁具的物理结构 (档案 I)...",
+        "正在扫描：水箱内壁的痕迹 (档案 II)...",
+        "正在恢复：中控台的操作日志 (档案 III)..."
+    ];
+    const mathQs = [ {q: "14 + 17", a: 31}, {q: "26 - 12", a: 14}, {q: "9 + 25", a: 34} ];
+
+    let currentRound = 0;
+    
+    // 获取分组 (URL 参数 g)
+    const urlParams = new URLSearchParams(window.location.search);
+    const assignedGroup = urlParams.get('g') ? parseInt(urlParams.get('g')) : Math.floor(Math.random() * 3) + 1;
+
+    let experimentData = {
+        group: assignedGroup, 
+        rounds: [], 
+        finalChoice: "",
+        isCorrect: false,
+        startTime: Date.now()
+    };
+
+    let waitStartTime, waitTimeout, currentVerifErrors = 0, currentFidgetClicks = 0, currentClickSkipTime = null;
+
+    // --- 核心流程控制 (保持不变) ---
+    function nextRound() {
+        if (currentRound < clues.length) {
+            startWaiting();
+        } else {
+            switchStage('stage-deduction');
+        }
+    }
+
+    function startWaiting() {
+        if (waitTimeout) clearTimeout(waitTimeout);
+        
+        switchStage('stage-loading');
+        
+        if (currentRound < loadingTexts.length) {
+            document.getElementById('loading-title').innerText = loadingTexts[currentRound];
+        }
+
+        const bar = document.getElementById('progBar');
+        const container = document.getElementById('stage-loading');
+        
+        document.getElementById('math-challenge').classList.add('hidden');
+        document.getElementById('skip-wrapper').classList.remove('hidden');
+        document.getElementById('math-answer').value = "";
+
+        // 重置动画
+        container.classList.remove('mode-linear', 'mode-fast-start', 'mode-peak-end');
+        bar.style.transition = 'none'; 
+        bar.style.width = "0%";
+        
+        void bar.offsetWidth; // 强制重绘
+
+        // 延迟触发动画
+        setTimeout(() => {
+            if (experimentData.group === 1) container.classList.add('mode-linear');
+            else if (experimentData.group === 2) container.classList.add('mode-fast-start');
+            else if (experimentData.group === 3) container.classList.add('mode-peak-end');
+
+            bar.style.transition = ''; 
+            bar.style.width = "100%";
+        }, 50);
+
+        waitStartTime = Date.now();
+        currentVerifErrors = 0;
+        currentFidgetClicks = 0;
+        currentClickSkipTime = null;
+
+        waitTimeout = setTimeout(() => {
+            finishWaiting(false);
+        }, 8000);
+    }
+
+    function handleFidget(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        currentFidgetClicks++;
+    }
+
+    function clickSkip() {
+        if (currentClickSkipTime === null) {
+            currentClickSkipTime = Date.now() - waitStartTime;
+        }
+
+        document.getElementById('math-question').innerText = mathQs[currentRound].q;
+        document.getElementById('skip-wrapper').classList.add('hidden');
+        document.getElementById('math-challenge').classList.remove('hidden');
+    }
+
+    function checkMath() {
+        const val = parseInt(document.getElementById('math-answer').value);
+        if (val === mathQs[currentRound].a) {
+            clearTimeout(waitTimeout); 
+            const bar = document.getElementById('progBar');
+            bar.style.transition = 'width 200ms ease-out';
+            bar.style.width = "100%";
+            setTimeout(() => {
+                 finishWaiting(true);
+            }, 200); 
+        } else {
+            currentVerifErrors++;
+            alert("验证未通过");
+            document.getElementById('math-answer').value = "";
+        }
+    }
+
+    function finishWaiting(skipped) {
+        if (waitTimeout) clearTimeout(waitTimeout);
+        
+        experimentData.rounds.push({
+            round: currentRound + 1,
+            skipped: skipped,
+            verifErrors: currentVerifErrors,
+            waitTime_ms: Date.now() - waitStartTime, 
+            fidgetClicks: currentFidgetClicks,
+            timeToClickSkip_ms: currentClickSkipTime 
+        });
+        
+        document.getElementById('clue-meta').innerText = clues[currentRound].meta;
+        document.getElementById('clue-text').innerText = clues[currentRound].text;
+        switchStage('stage-clue');
+        currentRound++;
+    }
+
+    function submitVerdict() {
+        const sel = document.querySelector('input[name="suspect"]:checked');
+        if (!sel) return alert("请指认真凶");
+        experimentData.finalChoice = sel.value;
+        experimentData.isCorrect = (sel.value === "舞台监督");
+        
+        const header = document.getElementById('result-header');
+        const msg = document.getElementById('result-message');
+        if (experimentData.isCorrect) {
+            header.innerHTML = '<div class="stamp stamp-success">推理成功</div>';
+            msg.innerText = "你的洞察力令人惊叹。你看穿了舞台监督拙劣的误触谎言。";
+        } else {
+            header.innerHTML = '<div class="stamp stamp-fail">推理失败</div>';
+            msg.innerText = "很遗憾。真正的凶手是舞台监督。";
+        }
+        switchStage('stage-result');
+    }
+
+    function goToExport() {
+        document.getElementById('final-data').value = JSON.stringify(experimentData, null, 2);
+        switchStage('stage-export');
+    }
+
+    function switchStage(id) {
+        document.querySelectorAll('.main-stage').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        window.scrollTo(0,0); // 切换步骤时自动回到顶部
+    }
+
+    function copyData() {
+        const txt = document.getElementById('final-data');
+        txt.select(); document.execCommand('copy');
+        document.getElementById('copy-btn').innerText = "✅ 已复制";
+    }
+</script>
+</body>
+</html>
