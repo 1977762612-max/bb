@@ -1,3 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>CASE FILE: THE MAGICIAN'S LAST ACT</title>
+    <style>
+        :root {
+            --bg-paper: #f0e6d2;
+            --ink-black: #1a1a1a;
+            --stamp-red: #8a3324;
+            --success-green: #2e5c34;
+            --font-head: 'Courier New', Courier, monospace;
+        }
+        body { background-color: #1a1510; color: var(--ink-black); font-family: 'Georgia', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; user-select: none; }
+        .container { background-color: var(--bg-paper); width: 90%; max-width: 800px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid #3e362e; position: relative; }
+        .hidden { display: none; }
+        h1, h2, h3 { font-family: var(--font-head); text-transform: uppercase; border-bottom: 2px solid var(--ink-black); padding-bottom: 10px; }
+        .btn { background: var(--ink-black); color: white; padding: 10px 20px; border: none; cursor: pointer; font-family: var(--font-head); margin-top: 10px; font-size: 16px; }
+        .btn:hover { background: var(--stamp-red); }
+        .btn-skip { background: transparent; color: var(--stamp-red); border: 1px dashed var(--stamp-red); padding: 5px 10px; cursor: pointer; font-size: 12px; margin-top: 10px; }
+        .clue-box { background: rgba(255,255,255,0.5); padding: 20px; border-left: 5px solid var(--stamp-red); margin: 20px 0; line-height: 1.6; }
+        
+        .profile-card { background: #e8e1d2; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; font-size: 0.95em; }
+        .profile-name { font-weight: bold; color: var(--stamp-red); display: block; margin-bottom: 4px; }
+        .profile-motive { font-style: italic; color: #666; display: block; }
+
+        .loader-track { width: 100%; height: 20px; background: #ddd; border: 2px solid var(--ink-black); margin: 20px 0; overflow: hidden; }
+        .loader-fill { width: 0%; height: 100%; background: var(--ink-black); } 
+        
+        #math-challenge { margin-top: 15px; padding: 15px; border: 1px solid #aaa; background: #e8e1d2; text-align: center; }
+        input[type="number"] { padding: 5px; width: 60px; font-size: 16px; border: 1px solid var(--ink-black); }
+        
+        .result-box { padding: 20px; border: 3px double var(--ink-black); margin: 20px 0; background: rgba(0,0,0,0.05); }
+        .truth-reveal { font-size: 0.9em; color: #333; margin-top: 15px; border-top: 1px solid #999; padding-top: 10px; }
+        .stamp { font-size: 24px; font-weight: bold; transform: rotate(-10deg); display: inline-block; padding: 5px 15px; border: 3px solid; margin-bottom: 15px; }
+        .stamp-success { color: var(--success-green); border-color: var(--success-green); }
+        .stamp-fail { color: var(--stamp-red); border-color: var(--stamp-red); }
+    </style>
+</head>
+<body>
+
+<div class="container" id="game-container">
+    <div id="stage-intro" class="main-stage">
+        <h1>案卷编号：#7702</h1>
+        <p>著名魔术师在表演“水箱逃生”时溺亡。你需要调阅三份核心档案并指出真凶。</p>
+        
+        <h3>涉案人员档案 (含动机分析)</h3>
+        <div class="profile-card">
+            <span class="profile-name">死者：魔术师 (身高 185cm)</span>
+            <span class="profile-motive">背景：有才华且很受观众喜爱，水箱逃生是他的代表作品。私下为人刻薄。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 A：灯光师 (身高 172cm)</span>
+            <span class="profile-motive">动机：长期遭受死者言语霸凌，曾当众发誓“迟早让他闭嘴”。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 B：替补演员 (身高 162cm)</span>
+            <span class="profile-motive">动机：才华被死者压制十年，死者扬言只要活着一天，就不让他登台。</span>
+        </div>
+        <div class="profile-card">
+            <span class="profile-name">嫌疑人 C：舞台监督 (身高 178cm)</span>
+            <span class="profile-motive">动机：和死者合作多年，被死者发现了某个重要把柄，有成员听到他们在后台激烈争吵。</span>
+        </div>
+
+        <p style="margin-top: 20px; font-style: italic; color: #555;">注意：档案解密中，请稍候...</p>
+        <button class="btn" onclick="nextRound()">开始调阅档案</button>
+    </div>
+
+    <div id="stage-loading" class="main-stage hidden" onclick="handleFidget(event)">
+        <h2 id="loading-title">正在解密档案...</h2>
+        <div class="loader-track"><div class="loader-fill" id="progBar"></div></div>
+        
+        <div id="skip-wrapper">
+            <button class="btn-skip" onclick="clickSkip()">>> 强制拉取 (需管理员验证)</button>
+        </div>
+
+        <div id="math-challenge" class="hidden">
+            <p><strong>系统暂停：等待验证</strong></p>
+            <p>请输入计算结果以强制加载：</p>
+            <span id="math-question" style="font-size: 1.2em; letter-spacing: 2px;"></span> = 
+            <input type="number" id="math-answer">
+            <button class="btn" style="padding:5px 15px; margin-left: 10px;" onclick="checkMath()">确认</button>
+        </div>
+    </div>
+
+    <div id="stage-clue" class="main-stage hidden">
+        <h2 id="clue-meta"></h2>
+        <div class="clue-box" id="clue-text"></div>
+        <button class="btn" onclick="nextRound()">下一步</button>
+    </div>
+
+    <div id="stage-deduction" class="main-stage hidden">
+        <h2>结案陈词</h2>
+        <p>结合动机与证据，谁是凶手？</p>
+        <label><input type="radio" name="suspect" value="灯光师"> 灯光师 (172cm / 动机：长期霸凌)</label><br><br>
+        <label><input type="radio" name="suspect" value="替补演员"> 替补演员 (162cm / 动机：取代上位)</label><br><br>
+        <label><input type="radio" name="suspect" value="舞台监督"> 舞台监督 (178cm / 动机：发现把柄)</label><br><br>
+        <button class="btn" onclick="submitVerdict()">提交判决</button>
+    </div>
+
+    <div id="stage-result" class="main-stage hidden">
+        <div id="result-header"></div>
+        <div class="result-box">
+            <p id="result-message"></p>
+            <div class="truth-reveal">
+                <h3>真相还原</h3>
+                <p><strong>真凶：舞台监督</strong></p>
+                <p>1. <strong>作案动机</strong>：舞台监督利用职务之便贪污公款的证据被魔术师掌握。魔术师以此勒索并扬言：如果在今晚演出结束前不答应条件，明天就把证据交给警方。</p>
+                <p>2. <strong>物理证据</strong>：水箱内壁 150cm 处的擦痕是舞台监督在布置机关时，特意弯腰在低处作业留下的。他利用替补演员身高的特征制造了这条伪证，意图将嫌疑嫁祸给急于上位的替补。</p>
+                <p>3. <strong>关键破绽</strong>：当晚确实检测到黑客攻击导致界面瘫痪。这很可能是舞台监督自导自演。调查发现，中控台设置有物理切断按钮。凶手作为一名资深的舞台监督，不可能不知道按钮的存在。</p>
+            </div>
+        </div>
+        <button class="btn" onclick="goToExport()">生成实验数据</button>
+    </div>
+
+    <div id="stage-export" class="main-stage hidden">
+        <h2>实验数据存档</h2>
+        <p>请复制下方代码，粘贴到问卷的<strong>第一题</strong>中：</p>
+        <textarea id="final-data" style="width:100%; height:250px; font-family:monospace; padding:10px; font-size: 12px;" readonly></textarea>
+        <br><br>
+        <button class="btn" id="copy-btn" onclick="copyData()">复制数据</button>
+    </div>
+</div>
+
+<script>
 <script>
     const clues = [
         { meta: "档案 I：锁具分析", text: "水箱挂锁没有被撬痕迹，但锁芯内部由于极度低温变得像饼干一样脆，一敲即碎。后台只有特效组用来制造烟雾的‘液氮’能造成这种效果。这意味着凶手不需要钥匙，只需要能接触到后台特效设备即可。" },
@@ -176,6 +301,11 @@
         document.getElementById('copy-btn').innerText = "✅ 已复制";
     }
 </script>
+    }
+</script>
+</body>
+
+</html>
 
 
 
